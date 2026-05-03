@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Катюша, пойдём на свидание?</title>
+  <style>
+    :root {
+      --bg1: #fff4f8;
+      --bg2: #f1f7ff;
+      --bg3: #fff9e8;
+      --text: #251b2f;
+      --muted: #6e6178;
+      --pink: #ff5d9e;
+      --pink2: #ff8fbd;
+      --violet: #8b5cf6;
+      --blue: #5aa9ff;
+      --yellow: #ffe08a;
+      --green: #5fd39a;
+      --red: #ff6b6b;
+      --white: rgba(255,255,255,.88);
+      --glass: rgba(255,255,255,.62);
+      --shadow: 0 24px 80px rgba(86, 43, 119, .18);
+      --shadow2: 0 14px 36px rgba(255, 93, 158, .22);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 141, 190, .35), transparent 30%),
+        radial-gradient(circle at 85% 15%, rgba(90, 169, 255, .32), transparent 30%),
+        radial-gradient(circle at 50% 92%, rgba(255, 224, 138, .42), transparent 32%),
+        linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+    }
+
+    body {
+      min-height: 100vh;
+      touch-action: manipulation;
+    }
+
+    button, input, textarea { font-family: inherit; }
+
+    .noise {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: .12;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+      z-index: 1;
+    }
+
+    .floaters {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .floater {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      opacity: .45;
+      animation: floaty linear infinite;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.08));
+    }
+
+    @keyframes floaty {
+      0% { transform: translateY(110vh) rotate(0deg) scale(.7); opacity: 0; }
+      10% { opacity: .5; }
+      80% { opacity: .5; }
+      100% { transform: translateY(-20vh) rotate(360deg) scale(1.25); opacity: 0; }
+    }
+
+    .app {
+      position: relative;
+      z-index: 3;
+      min-height: 100vh;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-frame {
+      width: min(100%, 460px);
+      min-height: min(820px, calc(100vh - 36px));
+      position: relative;
+      border-radius: 38px;
+      padding: 12px;
+      background: linear-gradient(145deg, rgba(255,255,255,.82), rgba(255,255,255,.35));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.8);
+      overflow: hidden;
+    }
+
+    .screen {
+      position: relative;
+      min-height: calc(100vh - 60px);
+      max-height: 850px;
+      border-radius: 30px;
+      overflow: hidden;
+      background: rgba(255,255,255,.52);
+      border: 1px solid rgba(255,255,255,.72);
+      backdrop-filter: blur(22px);
+    }
+
+    .progress {
+      position: absolute;
+      top: 16px;
+      left: 18px;
+      right: 18px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(37,27,47,.08);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--pink), var(--violet), var(--blue));
+      transition: width .55s cubic-bezier(.2,.9,.2,1);
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      padding: 54px 20px 24px;
+      display: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scene.active {
+      display: flex;
+      flex-direction: column;
+      animation: sceneIn .55s cubic-bezier(.2,.9,.2,1) both;
+    }
+
+    @keyframes sceneIn {
+      from { opacity: 0; transform: translateY(18px) scale(.98); filter: blur(8px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+      min-height: 600px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255,255,255,.66);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      border: 1px solid rgba(255,255,255,.85);
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(36px, 10vw, 62px);
+      line-height: .9;
+      letter-spacing: -.07em;
+      text-wrap: balance;
+    }
+
+    .title .gradient {
+      display: block;
+      background: linear-gradient(110deg, #ff4f98, #8b5cf6, #38a4ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 3s ease-in-out infinite;
+      background-size: 160% 100%;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 360px;
+    }
+
+    .card {
+      width: 100%;
+      border-radius: var(--radius);
+      background: var(--white);
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: 0 16px 40px rgba(55,36,80,.1);
+      padding: 18px;
+    }
+
+    .question-card {
+      position: relative;
+      padding: 24px 18px 22px;
+      text-align: center;
+      overflow: visible;
+    }
+
+    .big-question {
+      margin: 0;
+      font-size: clamp(34px, 10vw, 56px);
+      line-height: .95;
+      letter-spacing: -.06em;
+    }
+
+    .bubble {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 12px);
+      transform: translateX(-50%) rotate(-2deg) scale(.92);
+      width: max-content;
+      max-width: 245px;
+      padding: 12px 15px;
+      border-radius: 20px 20px 20px 6px;
+      background: #fff;
+      border: 2px solid #1f1728;
+      box-shadow: 7px 7px 0 rgba(31,23,40,.15);
+      font-weight: 950;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      z-index: 8;
+    }
+
+    .bubble.show {
+      opacity: 1;
+      transform: translateX(-50%) rotate(-2deg) scale(1);
+      animation: pop .28s ease both;
+    }
+
+    .bubble::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -13px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-right: 2px solid #1f1728;
+      border-bottom: 2px solid #1f1728;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    @keyframes pop {
+      0% { transform: translateX(-50%) scale(.7) rotate(-7deg); }
+      70% { transform: translateX(-50%) scale(1.08) rotate(1deg); }
+      100% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+    }
+
+    .btn-row {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+      min-height: 92px;
+      position: relative;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      min-height: 54px;
+      padding: 15px 23px;
+      font-weight: 950;
+      font-size: 16px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, var(--pink), var(--violet));
+      box-shadow: var(--shadow2);
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:active { transform: scale(.96); }
+    .btn:hover { filter: brightness(1.03); box-shadow: 0 18px 42px rgba(255,93,158,.3); }
+
+    .btn.secondary {
+      color: var(--text);
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(37,27,47,.08);
+      box-shadow: 0 12px 28px rgba(55,36,80,.1);
+    }
+
+    .yes-wrap {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn.yes {
+      min-width: 124px;
+      animation: pulseYes 1.5s ease-in-out infinite;
+      position: relative;
+      z-index: 3;
+    }
+
+    .btn.yes::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: inherit;
+      border: 2px solid rgba(255,93,158,.28);
+      animation: yesRing 1.6s ease-in-out infinite;
+    }
+
+    @keyframes yesRing {
+      0%, 100% { transform: scale(.92); opacity: .3; }
+      50% { transform: scale(1.15); opacity: .75; }
+    }
+
+    @keyframes pulseYes {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-3px) scale(1.035); }
+    }
+
+    .btn.no {
+      min-width: 106px;
+      position: relative;
+      background: linear-gradient(135deg, #2f2a37, #6d6477);
+      box-shadow: 0 14px 30px rgba(31,23,40,.16);
+      transition: left .18s ease, top .18s ease, transform .18s ease;
+    }
+
+    .wiggle { animation: wiggle .34s ease both; }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-4deg) scale(1.04); }
+      60% { transform: rotate(4deg) scale(.98); }
+    }
+
+    .mini-note {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .option {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(37,27,47,.08);
+      background: rgba(255,255,255,.76);
+      border-radius: 24px;
+      padding: 15px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 13px;
+      align-items: center;
+      box-shadow: 0 12px 28px rgba(55,36,80,.08);
+      cursor: pointer;
+      transition: .2s ease;
+      color: var(--text);
+    }
+
+    .option:hover, .option.selected {
+      transform: translateY(-2px);
+      border-color: rgba(255,93,158,.45);
+      box-shadow: 0 16px 34px rgba(255,93,158,.18);
+      background: #fff;
+    }
+
+    .option.disabled {
+      opacity: .45;
+      filter: grayscale(.3);
+    }
+
+    .emoji {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      font-size: 25px;
+      background: linear-gradient(135deg, rgba(255,93,158,.18), rgba(139,92,246,.16));
+    }
+
+    .option h3 {
+      margin: 0 0 3px;
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    .option p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .pill {
+      justify-self: end;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(95,211,154,.18);
+      color: #1f8a57;
+      white-space: nowrap;
+    }
+
+    .pill.warn {
+      background: rgba(255,224,138,.36);
+      color: #9a6a00;
+    }
+
+    .pill.nope {
+      background: rgba(255,107,107,.16);
+      color: #bd3333;
+    }
+
+    .mood-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+    }
+
+    .mood-btn {
+      border: 1px solid rgba(37,27,47,.08);
+      border-radius: 18px;
+      background: rgba(255,255,255,.74);
+      min-height: 72px;
+      box-shadow: 0 10px 22px rgba(55,36,80,.08);
+      font-weight: 900;
+      color: var(--text);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .mood-btn span {
+      display: block;
+      font-size: 25px;
+      margin-bottom: 4px;
+    }
+
+    .mood-btn.selected {
+      background: #fff;
+      border-color: rgba(255,93,158,.45);
+      box-shadow: 0 15px 32px rgba(255,93,158,.16);
+      transform: translateY(-2px);
+    }
+
+    .answer-box {
+      width: 100%;
+      min-height: 112px;
+      border: 1px solid rgba(37,27,47,.1);
+      border-radius: 22px;
+      padding: 14px;
+      resize: vertical;
+      background: rgba(255,255,255,.82);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.4;
+      outline: none;
+      box-shadow: 0 12px 26px rgba(55,36,80,.07);
+    }
+
+    .answer-box:focus {
+      border-color: rgba(255,93,158,.55);
+      box-shadow: 0 0 0 4px rgba(255,93,158,.12), 0 12px 26px rgba(55,36,80,.07);
+    }
+
+    .tiny-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .range-wrap {
+      width: 100%;
+      padding: 18px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 14px 36px rgba(55,36,80,.09);
+      border: 1px solid rgba(255,255,255,.86);
+    }
+
+    .range-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .range-value {
+      font-size: 30px;
+      font-weight: 1000;
+      letter-spacing: -.05em;
+      color: var(--pink);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      appearance: none;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--pink), var(--violet), var(--blue));
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fff;
+      border: 5px solid var(--pink);
+      box-shadow: 0 8px 18px rgba(0,0,0,.15);
+    }
+
+    .comfort-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .comfort {
+      border: 0;
+      border-radius: 20px;
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 10px 22px rgba(55,36,80,.08);
+      padding: 14px 8px;
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--text);
+      border: 1px solid rgba(37,27,47,.08);
+      min-height: 82px;
+    }
+
+    .comfort span {
+      display: block;
+      font-size: 27px;
+      margin-bottom: 5px;
+    }
+
+    .comfort.selected {
+      background: #fff;
+      border-color: rgba(255,93,158,.45);
+      box-shadow: 0 15px 32px rgba(255,93,158,.16);
+      transform: translateY(-2px);
+    }
+
+    .kiss-area {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at 50% 75%, rgba(255,93,158,.2), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.45));
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: 0 16px 38px rgba(55,36,80,.09);
+      overflow: hidden;
+    }
+
+    .kiss-target {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      width: 98px;
+      height: 98px;
+      border-radius: 34px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 16px 34px rgba(55,36,80,.13);
+      font-size: 52px;
+      border: 1px solid rgba(255,255,255,.9);
+    }
+
+    .kiss {
+      position: absolute;
+      top: -60px;
+      font-size: 42px;
+      cursor: pointer;
+      user-select: none;
+      animation: kissFall linear forwards;
+      filter: drop-shadow(0 10px 14px rgba(255,93,158,.22));
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @keyframes kissFall {
+      to { transform: translateY(540px) rotate(360deg); }
+    }
+
+    .score {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      z-index: 2;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.86);
+      font-weight: 950;
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+    }
+
+    .timer {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      z-index: 2;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.86);
+      font-weight: 950;
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+    }
+
+    .memory-board {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .memory-card {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255,93,158,.95), rgba(139,92,246,.95));
+      box-shadow: 0 12px 26px rgba(139,92,246,.18);
+      font-size: 30px;
+      cursor: pointer;
+      color: transparent;
+      transition: .22s ease;
+      transform-style: preserve-3d;
+    }
+
+    .memory-card.open, .memory-card.done {
+      background: rgba(255,255,255,.9);
+      color: var(--text);
+      transform: rotateY(180deg) scale(.98);
+    }
+
+    .letter {
+      width: 100%;
+      border-radius: 28px;
+      padding: 20px;
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 16px 40px rgba(55,36,80,.1);
+      border: 1px solid rgba(255,255,255,.9);
+      text-align: left;
+      line-height: 1.55;
+    }
+
+    .letter p { margin: 0 0 12px; }
+    .letter p:last-child { margin-bottom: 0; }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-radius: 20px;
+      padding: 13px 14px;
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(37,27,47,.07);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .summary-item strong {
+      color: var(--text);
+      text-align: right;
+    }
+
+    .confetti-piece {
+      position: fixed;
+      top: -18px;
+      width: 10px;
+      height: 14px;
+      pointer-events: none;
+      z-index: 20;
+      animation: confetti 1.8s linear forwards;
+      border-radius: 3px;
+    }
+
+    @keyframes confetti {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(30px);
+      z-index: 40;
+      width: min(calc(100% - 28px), 430px);
+      border-radius: 22px;
+      padding: 13px 15px;
+      background: rgba(37,27,47,.92);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 18px 48px rgba(37,27,47,.28);
+      opacity: 0;
+      transition: .24s ease;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .footer-actions {
+      margin-top: auto;
+      width: 100%;
+      display: grid;
+      gap: 10px;
+      padding-top: 18px;
+    }
+
+    .hidden { display: none !important; }
+
+    .small-title {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.02;
+      letter-spacing: -.05em;
+      text-align: center;
+    }
+
+    .center { text-align: center; }
+
+    .typewriter {
+      min-height: 56px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .map {
+      width: 100%;
+      height: 230px;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      background:
+        linear-gradient(90deg, transparent 47%, rgba(255,255,255,.42) 48%, rgba(255,255,255,.42) 52%, transparent 53%),
+        linear-gradient(0deg, transparent 47%, rgba(255,255,255,.42) 48%, rgba(255,255,255,.42) 52%, transparent 53%),
+        radial-gradient(circle at 20% 25%, rgba(95,211,154,.55), transparent 18%),
+        radial-gradient(circle at 75% 35%, rgba(90,169,255,.5), transparent 22%),
+        radial-gradient(circle at 54% 76%, rgba(255,224,138,.7), transparent 24%),
+        linear-gradient(135deg, rgba(255,93,158,.18), rgba(139,92,246,.16));
+      border: 1px solid rgba(255,255,255,.85);
+      box-shadow: 0 14px 32px rgba(55,36,80,.08);
+    }
+
+    .pin {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50% 50% 50% 12px;
+      background: #fff;
+      transform: rotate(-45deg);
+      box-shadow: 0 10px 22px rgba(0,0,0,.12);
+      border: 2px solid rgba(255,93,158,.3);
+      animation: bouncePin 1.4s ease-in-out infinite;
+    }
+
+    .pin span { transform: rotate(45deg); font-size: 21px; }
+    .pin.one { left: 18%; top: 24%; }
+    .pin.two { right: 18%; top: 18%; animation-delay: .2s; }
+    .pin.three { left: 45%; bottom: 18%; animation-delay: .4s; }
+
+    @keyframes bouncePin {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -8px; }
+    }
+
+    .final-title {
+      margin: 0;
+      font-size: clamp(34px, 9vw, 54px);
+      line-height: .92;
+      letter-spacing: -.06em;
+      text-align: center;
+    }
+
+    @media (min-width: 720px) {
+      .screen { min-height: 800px; }
+      .scene { padding-left: 24px; padding-right: 24px; }
+    }
+
+    @media (max-width: 430px) {
+      .option { grid-template-columns: auto 1fr; }
+      .option .pill { grid-column: 2; justify-self: start; }
+      .mood-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 380px) {
+      .app { padding: 8px; }
+      .phone-frame { border-radius: 28px; padding: 7px; }
+      .screen { border-radius: 24px; min-height: calc(100vh - 30px); }
+      .scene { padding: 48px 14px 18px; }
+      .comfort-grid { grid-template-columns: 1fr; }
+      .memory-board { gap: 7px; }
+      .memory-card { border-radius: 16px; font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="floaters" id="floaters"></div>
+  <main class="app">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="progress"><span id="progressBar"></span></div>
+
+        <section class="scene active" data-scene="0">
+          <div class="hero">
+            <div class="badge">💌 секретная страница, не показывать ФСБ романтики</div>
+            <h1 class="title">Катюше пришло <span class="gradient">одно важное предложение</span></h1>
+            <p class="subtitle">Катенька, это маленький квест, сделанный специально для тебя. Он не кусается. Максимум — внезапно пытается быть милым.</p>
+            <button class="btn" onclick="nextScene()">Открыть конверт ✨</button>
+            <p class="mini-note">Предупреждение: внутри возможны флирт, кринж, забота о твоей руке и один воздушный поцелуй.</p>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="1">
+          <div class="hero">
+            <div class="card question-card">
+              <p class="badge" style="margin:0 auto 16px; width:max-content;">важнейший опрос века</p>
+              <h2 class="big-question">ЕКАТЕРИНА, ПОЙДЁМ НА СВИДАНИЕ?</h2>
+              <p class="subtitle" style="margin:12px auto 0;">Катюша, тут есть два варианта, но один из них чисто декоративный. Как ручка на двери, которую надо толкать.</p>
+              <div class="btn-row" id="answerZone">
+                <div class="yes-wrap">
+                  <div class="bubble show" id="yesBubble">Катюша, жми сюда 💖</div>
+                  <button class="btn yes" id="yesBtn" onclick="acceptDate()">ДА 💖</button>
+                </div>
+                <button class="btn no" id="noBtn" onclick="runNoButton()">НЕТ</button>
+              </div>
+              <p class="mini-note">Кнопка «Нет» прошла курсы самообороны и специально не даётся тебе в руки.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="2">
+          <h2 class="small-title">Ура, Катенька. Договор почти подписан кровью романтики.</h2>
+          <p class="typewriter" id="typeText"></p>
+          <div class="card">
+            <p class="center" style="margin:0 0 12px; font-weight:900;">Но есть важный медицинский департамент:</p>
+            <p class="subtitle center" style="margin:0 auto;">Раз твоя рука сейчас повреждена, надо выбрать формат свидания так, чтобы было классно, красиво и без режима «ой, кажется, я доломалась».</p>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" onclick="nextScene()">Выбрать уровень нагрузки 🩹</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="3">
+          <h2 class="small-title">Сколько твоя рука разрешает приключений, Катюша?</h2>
+          <p class="subtitle center">Выбери честно. Этот сайт сделан для Екатерины, поэтому обещает заботиться, не драматизировать и немного шутить. Ну почти.</p>
+          <div class="comfort-grid">
+            <button class="comfort" onclick="chooseComfort('easy', this)"><span>🫖</span>Лайт<br><small>гуляем, вкусно едим</small></button>
+            <button class="comfort" onclick="chooseComfort('medium', this)"><span>🚲</span>Средне<br><small>чуть активно, без геройства</small></button>
+            <button class="comfort" onclick="chooseComfort('brave', this)"><span>🎾</span>Я боец<br><small>можно движ, но аккуратно</small></button>
+          </div>
+          <div class="range-wrap" style="margin-top:14px;">
+            <div class="range-top">
+              <strong>Запас энергии</strong>
+              <span class="range-value"><span id="energyValue">50</span>%</span>
+            </div>
+            <input id="energyRange" type="range" min="0" max="100" value="50" oninput="updateEnergy(this.value)" />
+            <p class="mini-note" id="energyComment" style="margin-top:12px;">50% — режим «я могу, но без Олимпиады».</p>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" id="comfortNext" onclick="nextScene()" disabled style="opacity:.45;">Дальше</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="4">
+          <h2 class="small-title">Куда идём?</h2>
+          <p class="subtitle center">Я подстроюсь под твою руку, настроение и уровень «хочу красиво, но без травматологии».</p>
+          <div class="grid" id="activityGrid"></div>
+          <div class="footer-actions">
+            <button class="btn" id="activityNext" onclick="nextScene()" disabled style="opacity:.45;">Утвердить маршрут</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="5">
+          <h2 class="small-title">Настроение свидания</h2>
+          <p class="subtitle center">Выбери вайб. Это важно: вдруг ты сегодня загадочная графиня, а я припрусь с теннисной ракеткой как NPC.</p>
+          <div class="mood-row">
+            <button class="mood-btn" onclick="chooseMood('романтично', this)"><span>🌹</span>Романтик</button>
+            <button class="mood-btn" onclick="chooseMood('смешно и легко', this)"><span>🤡</span>Угар</button>
+            <button class="mood-btn" onclick="chooseMood('красиво и спокойно', this)"><span>🌅</span>Красиво</button>
+            <button class="mood-btn" onclick="chooseMood('спонтанно, но без дурки', this)"><span>⚡</span>Спонтанно</button>
+          </div>
+          <div class="card" style="margin-top:14px;">
+            <p style="margin:0 0 10px; font-weight:950;">Комментарий для маршрутного штаба:</p>
+            <textarea class="answer-box" id="extraComment" placeholder="Например: рука пока болит, но гулять могу; хочу красивое место; теннис потом; кофе обязательно; поцелуй — по погоде."></textarea>
+            <p class="mini-note" style="margin-top:10px;">Это попадёт в финальное сообщение, чтобы ты мог получить её ответы.</p>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" id="moodNext" onclick="saveComment(); nextScene();" disabled style="opacity:.45;">Записать в секретный протокол</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="6">
+          <h2 class="small-title">Мини-игра №1: поймай поцелуй</h2>
+          <p class="subtitle center">ХОБА. ВНЕЗАПНЫЙ ПОЦЕЛУЙ ЛЕТИТ К ТЕБЕ, КАТЮША. Нужно поймать 7, иначе романтический отдел будет ворчать.</p>
+          <div class="kiss-area" id="kissArea">
+            <div class="score">💋 <span id="kissScore">0</span>/7</div>
+            <div class="timer">⏱ <span id="kissTimer">20</span></div>
+            <div class="kiss-target">😳</div>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" id="startKiss" onclick="startKissGame()">Начать ловлю 💋</button>
+            <button class="btn hidden" id="kissNext" onclick="nextScene()">Пойманы. Идём дальше</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="7">
+          <h2 class="small-title">Мини-игра №2: найди парочки свидания</h2>
+          <p class="subtitle center">Открой одинаковые карточки. Это как отношения, только проще: тут хотя бы правила понятные, Катенька.</p>
+          <div class="memory-board" id="memoryBoard"></div>
+          <p class="mini-note center" id="memoryStatus">Пар найдено: 0/4</p>
+          <div class="footer-actions">
+            <button class="btn hidden" id="memoryNext" onclick="nextScene()">Парочки найдены ✨</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="8">
+          <h2 class="small-title">Маршрутный штаб</h2>
+          <div class="map">
+            <div class="pin one"><span>☕</span></div>
+            <div class="pin two"><span>🌅</span></div>
+            <div class="pin three"><span>💬</span></div>
+          </div>
+          <div class="letter" style="margin-top:14px;">
+            <p><strong>План такой:</strong></p>
+            <p id="planText">Сначала выбираем формат, который не будет издевательством над рукой. Потом — красивое место, вкусный напиток и прогулка без спешки.</p>
+            <p>Если твоя рука скажет «я сегодня хрупкий багет», мы сделаем лайт-режим. Если скажет «я почти Росомаха», можно добавить активностей.</p>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" onclick="nextScene()">Одобрить штаб 🗺️</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="9">
+          <h2 class="small-title">Финальное согласование</h2>
+          <div class="summary" id="summaryBox"></div>
+          <div class="letter" style="margin-top:14px;">
+            <p><strong>Важно:</strong> на следующем экране будет готовый текст с её выбором. Его можно скопировать или сразу отправить тебе в Telegram.</p>
+            <p>Я беру на себя: маршрут, настроение, заботу, запасной план и обязанность не быть душнилой. Ну ладно, душнить буду максимум 3%.</p>
+          </div>
+          <div class="footer-actions">
+            <button class="btn" onclick="nextScene(); bigConfetti();">Финальная кнопка, страшно важная</button>
+          </div>
+        </section>
+
+        <section class="scene" data-scene="10">
+          <div class="hero">
+            <div class="badge">протокол свидания имени Екатерины</div>
+            <h2 class="final-title">Катюшин ответ готов к отправке 💖</h2>
+            <p class="subtitle">Сайт всё записал. Не в налоговую, не переживай. Только в романтический протокол, чтобы я понял, куда тебя вести и как не угробить твою руку.</p>
+            <div class="card">
+              <p style="margin:0; font-weight:950; font-size:18px; line-height:1.35;">Сообщение для отправки:</p>
+              <p id="copyText" style="margin:10px 0 0; color:var(--muted); line-height:1.5;">Я, Екатерина, согласна на свидание. Рука выбирает безопасный режим, а я выбираю быть красивой и загадочной.</p>
+            </div>
+            <div class="tiny-actions">
+              <button class="btn" onclick="copyInvite()">Скопировать 💌</button>
+              <button class="btn" onclick="sendToTelegram()">Отправить тебе 🚀</button>
+            </div>
+            <button class="btn secondary" onclick="restartQuest()">Пройти квест ещё раз</button>
+            <p class="mini-note">Чтобы кнопка «Отправить тебе» работала, в коде надо один раз заменить <strong>YOUR_TELEGRAM_USERNAME</strong> на твой Telegram username без @.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      scene: 0,
+      comfort: null,
+      energy: 50,
+      activity: null,
+      kisses: 0,
+      memoryPairs: 0,
+      mood: null,
+      extraComment: '',
+      kissStarted: false,
+      memoryStarted: false
+    };
+
+    const scenes = [...document.querySelectorAll('.scene')];
+    const progressBar = document.getElementById('progressBar');
+    const toast = document.getElementById('toast');
+
+    const TELEGRAM_USERNAME = 'TopSith';
+
+    const phrases = [
+      'КАТЮША, АЛО, НА МЕНЯ ЖМИ!',
+      'КАТЕНЬКА, НУ И ДОЛГО ТЫ БУДЕШЬ НЕ ЖАТЬ НА МЕНЯ?',
+      'ЕКАТЕРИНА, Я ТУТ САМЫЙ КРАСИВЫЙ ВАРИАНТ, ВООБЩЕ-ТО.',
+      'КНОПКА «НЕТ» НЕСЕРЬЁЗНАЯ. Я — СЕРЬЁЗНАЯ.',
+      'КАТЮШ, НЕ ЛОМАЙ СЮЖЕТ РОМКОМА.',
+      'ПОЖАЛУЙСТА. У МЕНЯ УЖЕ БАНТИК НАДЕТ.',
+      'ЕКАТЕРИНА, СУДЬБА НАМЕКАЕТ ЖАТЬ «ДА».',
+      'КАТЕНЬКА, ТУТ ВСЁ ДЛЯ ТЕБЯ, НЕ СОПРОТИВЛЯЙСЯ КРАСИВОМУ.',
+      'САЙТ ПЛАКАЛ, КОГДА ТЫ СМОТРЕЛА НЕ НА «ДА».',
+      'НАЖМИ «ДА», ИНАЧЕ Я НАЧНУ ПЕТЬ СЕРЕНАДУ. ПЛОХО.',
+      'КАТЮШ, ЭТО НЕ КНОПКА. ЭТО ПОРТАЛ В НОРМАЛЬНЫЙ ВЕЧЕР.',
+      'ДАВАЙ БЕЗ САМОСАБОТАЖА, МАДАМ.'
+    ];
+
+    const activities = {
+      easy: [
+        { id: 'walk', emoji: '🚶‍♀️', title: 'Красивая прогулка', text: 'Без спорта, без героизма, просто мило и красиво.', pill: 'идеально' },
+        { id: 'place', emoji: '🌅', title: 'Поехать в красивое место', text: 'Вид, разговоры, фото и драматичный закат.', pill: 'вау' },
+        { id: 'coffee', emoji: '☕', title: 'Кофе + неспешный маршрут', text: 'Лайт-режим для руки и нервной системы.', pill: 'безопасно' },
+        { id: 'bike', emoji: '🚲', title: 'Велосипеды', text: 'Пока под вопросом: рука может вызвать юриста.', pill: 'осторожно', warn: true },
+        { id: 'tennis', emoji: '🎾', title: 'Большой теннис', text: 'Сегодня это звучит как DLC «травмпункт».', pill: 'лучше потом', nope: true }
+      ],
+      medium: [
+        { id: 'place', emoji: '🌅', title: 'Красивое место + прогулка', text: 'Активно, но без режима «выжить любой ценой».', pill: 'топ' },
+        { id: 'bike-soft', emoji: '🚲', title: 'Велосипеды лайтово', text: 'Короткий маршрут, паузы, без гонки за жёлтой майкой.', pill: 'можно' },
+        { id: 'walk', emoji: '🚶‍♀️', title: 'Прогулка с вкусняшкой', text: 'Беспроигрышно, рука не пишет жалобу.', pill: 'уют' },
+        { id: 'tennis-soft', emoji: '🎾', title: 'Теннис попробовать', text: 'Только если рука не против и без мощных ударов.', pill: 'аккуратно', warn: true }
+      ],
+      brave: [
+        { id: 'tennis', emoji: '🎾', title: 'Большой теннис', text: 'Если рука реально готова. Без турнира Уимблдон, договорились.', pill: 'дерзко' },
+        { id: 'bike', emoji: '🚲', title: 'Велосипеды', text: 'Красивый маршрут, ветер, и я делаю вид, что не устал.', pill: 'спорт-романтика' },
+        { id: 'place', emoji: '🌅', title: 'Красивое место', text: 'На случай если мы внезапно выберем красоту вместо пота.', pill: 'романтично' },
+        { id: 'walk', emoji: '🚶‍♀️', title: 'Просто погулять', text: 'Классика. Работает даже когда мир сломан.', pill: 'надёжно' }
+      ]
+    };
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function updateProgress() {
+      progressBar.style.width = `${(state.scene / (scenes.length - 1)) * 100}%`;
+    }
+
+    function goToScene(index) {
+      state.scene = Math.max(0, Math.min(index, scenes.length - 1));
+      scenes.forEach((scene, i) => scene.classList.toggle('active', i === state.scene));
+      updateProgress();
+      if (state.scene === 2) startTypewriter();
+      if (state.scene === 4) renderActivities();
+      if (state.scene === 7 && !state.memoryStarted) startMemoryGame();
+      if (state.scene === 8) renderPlan();
+      if (state.scene === 9) renderSummary();
+      if (state.scene === 10) renderSummary();
+    }
+
+    function nextScene() {
+      goToScene(state.scene + 1);
+    }
+
+    function acceptDate() {
+      bigConfetti();
+      showToast('Вот это правильный выбор. Романтический отдел аплодирует.');
+      setTimeout(() => nextScene(), 650);
+    }
+
+    function runNoButton() {
+      const noBtn = document.getElementById('noBtn');
+      const zone = document.getElementById('answerZone');
+      const bubble = document.getElementById('yesBubble');
+      const yesBtn = document.getElementById('yesBtn');
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      bubble.textContent = phrase;
+      bubble.classList.add('show');
+      yesBtn.classList.add('wiggle');
+      setTimeout(() => yesBtn.classList.remove('wiggle'), 380);
+
+      const maxX = Math.max(40, zone.clientWidth - noBtn.offsetWidth - 8);
+      const maxY = 62;
+      const x = Math.random() * maxX - maxX / 2;
+      const y = Math.random() * maxY - maxY / 2;
+      noBtn.style.left = `${x}px`;
+      noBtn.style.top = `${y}px`;
+      noBtn.style.transform = `rotate(${Math.random() * 26 - 13}deg)`;
+    }
+
+    function attachNoButtonEvents() {
+      const noBtn = document.getElementById('noBtn');
+      ['mouseenter', 'pointerenter', 'touchstart', 'focus'].forEach(evt => {
+        noBtn.addEventListener(evt, (e) => {
+          e.preventDefault();
+          runNoButton();
+        }, { passive: false });
+      });
+    }
+
+    function startTypewriter() {
+      const el = document.getElementById('typeText');
+      const text = 'Так. Первый этап пройден. Ты нажала «Да», а значит где-то в мире один парень резко стал счастливее и чуть менее адекватен.';
+      el.textContent = '';
+      let i = 0;
+      clearInterval(window.typeTimer);
+      window.typeTimer = setInterval(() => {
+        el.textContent += text[i] || '';
+        i++;
+        if (i > text.length) clearInterval(window.typeTimer);
+      }, 28);
+    }
+
+    function chooseComfort(value, btn) {
+      state.comfort = value;
+      document.querySelectorAll('.comfort').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const next = document.getElementById('comfortNext');
+      next.disabled = false;
+      next.style.opacity = '1';
+      if (value === 'easy') showToast('Лайт-режим принят. Рука благодарит и ставит лайк большим пальцем, если может.');
+      if (value === 'medium') showToast('Средний режим: романтика есть, травматология отменяется.');
+      if (value === 'brave') showToast('Ого. Режим героини. Но руку всё равно слушаем.');
+    }
+
+    function chooseMood(value, btn) {
+      state.mood = value;
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const next = document.getElementById('moodNext');
+      next.disabled = false;
+      next.style.opacity = '1';
+      showToast('Вайб записан. Психологический портрет свидания стал ещё подозрительнее.');
+    }
+
+    function saveComment() {
+      const field = document.getElementById('extraComment');
+      state.extraComment = field ? field.value.trim() : '';
+    }
+
+    function updateEnergy(value) {
+      state.energy = Number(value);
+      document.getElementById('energyValue').textContent = value;
+      const c = document.getElementById('energyComment');
+      if (value < 25) c.textContent = `${value}% — режим «несите плед, чай и не трогайте меня спортом».`;
+      else if (value < 55) c.textContent = `${value}% — можно гулять, смеяться и делать вид, что мы взрослые.`;
+      else if (value < 80) c.textContent = `${value}% — можно добавить приключений, но без экстремального цирка.`;
+      else c.textContent = `${value}% — опасно бодро. Велосипед уже нервно звенит звонком.`;
+    }
+
+    function renderActivities() {
+      const grid = document.getElementById('activityGrid');
+      const mode = state.comfort || 'easy';
+      grid.innerHTML = '';
+      activities[mode].forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = `option ${item.nope ? 'disabled' : ''}`;
+        btn.innerHTML = `
+          <div class="emoji">${item.emoji}</div>
+          <div><h3>${item.title}</h3><p>${item.text}</p></div>
+          <div class="pill ${item.warn ? 'warn' : ''} ${item.nope ? 'nope' : ''}">${item.pill}</div>
+        `;
+        btn.onclick = () => {
+          if (item.nope) {
+            showToast('Этот вариант занесён в список «после восстановления руки».');
+            return;
+          }
+          state.activity = item;
+          document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+          btn.classList.add('selected');
+          const next = document.getElementById('activityNext');
+          next.disabled = false;
+          next.style.opacity = '1';
+          showToast(`Выбрано: ${item.title}. Романтический GPS доволен.`);
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function startKissGame() {
+      if (state.kissStarted) return;
+      state.kissStarted = true;
+      state.kisses = 0;
+      let time = 20;
+      document.getElementById('kissScore').textContent = '0';
+      document.getElementById('kissTimer').textContent = time;
+      document.getElementById('startKiss').classList.add('hidden');
+      const area = document.getElementById('kissArea');
+
+      const spawn = setInterval(() => {
+        createKiss(area);
+      }, 620);
+
+      const timer = setInterval(() => {
+        time--;
+        document.getElementById('kissTimer').textContent = time;
+        if (time <= 0 || state.kisses >= 7) {
+          clearInterval(timer);
+          clearInterval(spawn);
+          document.querySelectorAll('.kiss').forEach(k => k.remove());
+          if (state.kisses >= 7) {
+            showToast('Поцелуи успешно перехвачены. Угроза милоты устранена.');
+          } else {
+            showToast('Не все поцелуи пойманы, но суд засчитал старание.');
+          }
+          document.getElementById('kissNext').classList.remove('hidden');
+        }
+      }, 1000);
+    }
+
+    function createKiss(area) {
+      const kiss = document.createElement('div');
+      kiss.className = 'kiss';
+      kiss.textContent = Math.random() > .18 ? '💋' : '💖';
+      kiss.style.left = `${Math.random() * (area.clientWidth - 50) + 8}px`;
+      kiss.style.animationDuration = `${2.5 + Math.random() * 1.4}s`;
+      kiss.onclick = () => {
+        state.kisses++;
+        document.getElementById('kissScore').textContent = state.kisses;
+        kiss.textContent = '✨';
+        kiss.style.pointerEvents = 'none';
+        kiss.style.animation = 'none';
+        kiss.style.transform = 'scale(1.5)';
+        kiss.style.opacity = '0';
+        setTimeout(() => kiss.remove(), 180);
+        if (state.kisses >= 7) document.getElementById('kissNext').classList.remove('hidden');
+      };
+      area.appendChild(kiss);
+      setTimeout(() => kiss.remove(), 4300);
+    }
+
+    function startMemoryGame() {
+      state.memoryStarted = true;
+      state.memoryPairs = 0;
+      const board = document.getElementById('memoryBoard');
+      const icons = ['🚲','🎾','🌅','☕'];
+      const cards = [...icons, ...icons].sort(() => Math.random() - .5);
+      let opened = [];
+      let locked = false;
+      board.innerHTML = '';
+      document.getElementById('memoryStatus').textContent = 'Пар найдено: 0/4';
+
+      cards.forEach((icon, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'memory-card';
+        btn.dataset.icon = icon;
+        btn.dataset.index = index;
+        btn.textContent = icon;
+        btn.onclick = () => {
+          if (locked || btn.classList.contains('open') || btn.classList.contains('done')) return;
+          btn.classList.add('open');
+          opened.push(btn);
+          if (opened.length === 2) {
+            locked = true;
+            const [a, b] = opened;
+            if (a.dataset.icon === b.dataset.icon) {
+              setTimeout(() => {
+                a.classList.add('done');
+                b.classList.add('done');
+                opened = [];
+                locked = false;
+                state.memoryPairs++;
+                document.getElementById('memoryStatus').textContent = `Пар найдено: ${state.memoryPairs}/4`;
+                if (state.memoryPairs >= 4) {
+                  showToast('Все пары найдены. Это знак. Очень научный.');
+                  document.getElementById('memoryNext').classList.remove('hidden');
+                }
+              }, 350);
+            } else {
+              setTimeout(() => {
+                a.classList.remove('open');
+                b.classList.remove('open');
+                opened = [];
+                locked = false;
+              }, 700);
+            }
+          }
+        };
+        board.appendChild(btn);
+      });
+    }
+
+    function renderPlan() {
+      const activity = state.activity?.title || 'красивая прогулка';
+      const energyText = state.energy < 35 ? 'очень спокойно' : state.energy < 70 ? 'аккуратно активно' : 'можно добавить движухи';
+      document.getElementById('planText').textContent = `Сначала сверяемся с рукой. Потом формат: «${activity}». Темп: ${energyText}. Если рука начинает материться на языке боли — сразу переключаемся на красивое место, напиток и прогулку.`;
+    }
+
+    function renderSummary() {
+      const comfortNames = {
+        easy: 'Лайт: красиво и бережно',
+        medium: 'Средне: чуть активно, но без геройства',
+        brave: 'Боевой: можно движ, но слушаем руку'
+      };
+      const summary = document.getElementById('summaryBox');
+      const activity = state.activity?.title || 'Красивая прогулка';
+      saveComment();
+      const mood = state.mood || 'на твоё усмотрение, но без странностей';
+      const comment = state.extraComment ? `
+Комментарий Екатерины: ${state.extraComment}` : '
+Комментарий Екатерины: не оставила, значит она загадочная женщина, смирись.';
+      const message = `Я, Екатерина, официально согласна на свидание 💖
+
+Формат: ${activity}
+Режим руки: ${comfortNames[state.comfort] || 'бережный'}
+Энергия: ${state.energy}%
+Вайб: ${mood}${comment}
+
+Теперь твой ход. Только без дурки, но красиво.`;
+      document.getElementById('copyText').textContent = message;
+      summary.innerHTML = `
+        <div class="summary-item"><span>Ответ</span><strong>ДА 💖</strong></div>
+        <div class="summary-item"><span>Режим руки</span><strong>${comfortNames[state.comfort] || 'Бережный'}</strong></div>
+        <div class="summary-item"><span>Энергия</span><strong>${state.energy}%</strong></div>
+        <div class="summary-item"><span>Вариант</span><strong>${activity}</strong></div>
+        <div class="summary-item"><span>Вайб</span><strong>${mood}</strong></div>
+        <div class="summary-item"><span>Комментарий</span><strong>${state.extraComment || 'загадочно промолчала'}</strong></div>
+      `;
+    }
+
+    async function copyInvite() {
+      renderSummary();
+      const text = document.getElementById('copyText').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Ответ скопирован. Осталось отправить виновнику сайта. Он, вероятно, уже нервничает.');
+      } catch (e) {
+        showToast('Не получилось скопировать автоматически. Можно выделить текст руками. Технологии опять предали любовь.');
+      }
+    }
+
+    function sendToTelegram() {
+      renderSummary();
+      const text = document.getElementById('copyText').textContent;
+      if (!TELEGRAM_USERNAME || TELEGRAM_USERNAME === 'YOUR_TELEGRAM_USERNAME') {
+        showToast('Сначала замени YOUR_TELEGRAM_USERNAME в коде на свой username в Telegram.');
+        return;
+      }
+      const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function restartQuest() {
+      state.scene = 0;
+      state.comfort = null;
+      state.energy = 50;
+      state.activity = null;
+      state.kisses = 0;
+      state.memoryPairs = 0;
+      state.mood = null;
+      state.extraComment = '';
+      state.kissStarted = false;
+      state.memoryStarted = false;
+      document.getElementById('energyRange').value = 50;
+      updateEnergy(50);
+      document.querySelectorAll('.comfort').forEach(b => b.classList.remove('selected'));
+      document.getElementById('comfortNext').disabled = true;
+      document.getElementById('comfortNext').style.opacity = '.45';
+      document.getElementById('activityNext').disabled = true;
+      document.getElementById('activityNext').style.opacity = '.45';
+      document.getElementById('startKiss').classList.remove('hidden');
+      document.getElementById('kissNext').classList.add('hidden');
+      document.getElementById('memoryNext').classList.add('hidden');
+      const moodNext = document.getElementById('moodNext');
+      if (moodNext) { moodNext.disabled = true; moodNext.style.opacity = '.45'; }
+      const extraComment = document.getElementById('extraComment');
+      if (extraComment) extraComment.value = '';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      goToScene(0);
+    }
+
+    function bigConfetti() {
+      const colors = ['#ff5d9e', '#8b5cf6', '#5aa9ff', '#ffe08a', '#5fd39a'];
+      for (let i = 0; i < 70; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDelay = Math.random() * .45 + 's';
+        p.style.animationDuration = 1.2 + Math.random() * 1.5 + 's';
+        p.style.transform = `rotate(${Math.random() * 360}deg)`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 3200);
+      }
+    }
+
+    function createFloaters() {
+      const box = document.getElementById('floaters');
+      const items = ['💖','✨','🚲','🎾','🌸','💌','☕','🌅'];
+      for (let i = 0; i < 22; i++) {
+        const f = document.createElement('div');
+        f.className = 'floater';
+        f.textContent = items[Math.floor(Math.random() * items.length)];
+        f.style.left = Math.random() * 100 + 'vw';
+        f.style.animationDuration = 9 + Math.random() * 13 + 's';
+        f.style.animationDelay = Math.random() * 10 + 's';
+        f.style.fontSize = 15 + Math.random() * 18 + 'px';
+        box.appendChild(f);
+      }
+    }
+
+    attachNoButtonEvents();
+    createFloaters();
+    updateProgress();
+    updateEnergy(50);
+  </script>
+</body>
+</html>
